@@ -158,6 +158,8 @@ for i in range(1, 201):
 
 df_results = pd.DataFrame(results)
 
+df_results = df_results.set_index("Palier")
+
 ###################################
 # 7) Affichage
 ###################################
