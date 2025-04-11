@@ -38,7 +38,7 @@ def temps_run(palier_debut, etage_final, vitesse):
 ###################################
 # 3) Interface Streamlit
 ###################################
-st.title("Calcul de rentabilité de l'objet — Donjons en boucle")
+st.title("Calcul de rentabilité de la relique d'éveil")
 
 st.markdown("""
 Cette application vous permet :
