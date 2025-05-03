@@ -71,3 +71,27 @@ res_df["Nombre"] = res_df["Nombre"].apply(fmt)
 
 st.dataframe(res_df, use_container_width=True)
 
+def points_par_run(i: int, etage_final: int) -> int:
+    """Calcul le nombre de points gagnés par run complet."""
+    return sum(range(i, etage_final + 1))
+
+if(cout_total > 0):
+    level_relic = st.number_input("Niveau de la relique actuelle :", min_value=0,max_value=350, value=1)
+    idle_etage = st.number_input("Étage Maximum idle :", min_value=0, value=1)
+    if(level_relic > idle_etage):
+        st.info("Le niveau de la relique doit être inférieur ou égal à l'étage maximum.")
+        st.stop()
+    gain_run = points_par_run(level_relic, idle_etage)
+
+    nb_runs = math.ceil(cout_total / gain_run)
+    st.metric("⏳ Nombre de runs complets", fmt(nb_runs))
+    
+
+
+
+
+        
+
+
+
+
