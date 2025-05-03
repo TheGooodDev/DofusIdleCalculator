@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import math
-
+st.set_page_config(page_title="Rentabilité Relique", layout="wide")
 ###################################
 # 1) Chargement des données Excel
 ###################################
