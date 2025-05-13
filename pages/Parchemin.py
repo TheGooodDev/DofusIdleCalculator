@@ -1,24 +1,79 @@
 import streamlit as st
 import pandas as pd
 import math
+
+# ---------------- CONFIG PAGE ----------------
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed",page_title="Parchemins",page_icon="📜")
+# --- nav bar ---
+
+st.markdown("""
+    <style>
+        .main-title {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #fca311;
+            margin-bottom: 0.5rem;
+        }
+        .sub {
+            font-size: 1.3em;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: #ffffff;
+        }
+        .metric-value {
+            font-size: 2.5em !important;
+            color: #ffffff !important;
+        }
+                    /* Barre latérale */
+        section[data-testid="stSidebar"] {
+            background-color: #1c1c2e;
+            padding: 1.5rem 1rem;
+        }
+
+        /* Titres de pages */
+        .css-17eq0hr {
+            font-weight: bold;
+            color: #fca311;
+        }
+
+        /* Lien de page */
+        .css-1d391kg a {
+            color: #ffffff !important;
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 0.4rem 0.8rem;
+            display: block;
+            border-radius: 0.5rem;
+        }
+
+        /* Lien actif */
+        .css-1d391kg .css-1v3fvcr {
+            background-color: #3c3c5e !important;
+        }
+
+        /* Au survol */
+        .css-1d391kg a:hover {
+            background-color: #2a2a40;
+        }
+
+        /* Espacement pour la lisibilité */
+        .css-1d391kg {
+            margin-top: 1rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # ------------------- OUTIL DE FORMATTAGE -------------------
 def fmt(n: int | float) -> str:
-    """Formatte un nombre avec des espaces comme séparateur de milliers."""
-    return f"{n:,}".replace(",", " ")   # espace fine insécable U+202F
-# ------------------------ CONFIG APP --------------------------------
-st.set_page_config(page_title="📜 Parchemins", page_icon="📜", layout="wide")
-st.title("Coût en parchemins")
+    return f"{n:,}".replace(",", " ")  # espace fine insécable U+202F
 
-# ------------------------ TABLE DES PALIERS -------------------------
-# Chaque ligne : seuil MAX du palier, coût du parchemin, gain de stats, label d’affichage
+# ------------------------ TABLE DES PALIERS ----------------
 TIERS = pd.DataFrame(
     [
-        #  seuil_max   coût   +stats   label
         (   100_000,     10,       1,  "Petit Parchemin"),
         ( 1_000_000,    100,      35,  "Parchemin"),
         (10_000_000,  1_000,     450,  "Grand Parchemin"),
         (100_000_000,10_000,   6_000,  "Puissant Parchemin"),
-        # ➕ Ajoute ici de nouveaux paliers si besoin
     ],
     columns=["seuil_max", "cout", "gain", "label"],
 )
@@ -47,6 +102,8 @@ def calculer_cout_parchemin(niveau_actuel: int, niveau_voulu: int, tiers_df: pd.
     return cout_total, nb_parchemins
 
 # ------------------- UI ------------------------------------
+st.markdown('<div class="main-title">Coût en parchemins</div>', unsafe_allow_html=True)
+
 col1, col2 = st.columns(2)
 with col1:
     niveau_actuel = st.number_input("Stats actuelles :", min_value=0, value=1)
@@ -60,7 +117,7 @@ if niveau_voulu <= niveau_actuel:
 cout_total, details = calculer_cout_parchemin(niveau_actuel, niveau_voulu, TIERS)
 
 # ------------------- AFFICHAGE ------------------------------
-st.subheader("Résultat")
+st.markdown('<div class="sub">📊 Résultat</div>', unsafe_allow_html=True)
 st.metric("💰 Coût total (points d'éveil)", fmt(cout_total))
 
 res_df = (
@@ -71,27 +128,23 @@ res_df["Nombre"] = res_df["Nombre"].apply(fmt)
 
 st.dataframe(res_df, use_container_width=True)
 
+# ------------------- RUNS COMPLETS ------------------------------
 def points_par_run(i: int, etage_final: int) -> int:
-    """Calcul le nombre de points gagnés par run complet."""
     return sum(range(i, etage_final + 1))
 
-if(cout_total > 0):
-    level_relic = st.number_input("Niveau de la relique actuelle :", min_value=0,max_value=350, value=1)
-    idle_etage = st.number_input("Étage Maximum idle :", min_value=0, value=1)
-    if(level_relic > idle_etage):
+if cout_total > 0:
+    st.markdown('<div class="sub">🧪 Simulation de farm</div>', unsafe_allow_html=True)
+
+    col3, col4 = st.columns(2)
+    with col3:
+        level_relic = st.number_input("Niveau de la relique actuelle :", min_value=0, max_value=350, value=1)
+    with col4:
+        idle_etage = st.number_input("Étage Maximum idle :", min_value=0, value=1)
+
+    if level_relic > idle_etage:
         st.info("Le niveau de la relique doit être inférieur ou égal à l'étage maximum.")
         st.stop()
-    gain_run = points_par_run(level_relic, idle_etage)
 
+    gain_run = points_par_run(level_relic, idle_etage)
     nb_runs = math.ceil(cout_total / gain_run)
     st.metric("⏳ Nombre de runs complets", fmt(nb_runs))
-    
-
-
-
-
-        
-
-
-
-

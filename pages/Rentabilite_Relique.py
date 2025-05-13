@@ -1,7 +1,49 @@
 import streamlit as st
 import pandas as pd
 import math
-st.set_page_config(page_title="Rentabilité Relique", layout="wide")
+
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed",page_title="Rentabilité Relique")
+# --- nav bar ---
+st.markdown("""
+    <style>
+        /* Barre latérale */
+        section[data-testid="stSidebar"] {
+            background-color: #1c1c2e;
+            padding: 1.5rem 1rem;
+        }
+
+        /* Titres de pages */
+        .css-17eq0hr {
+            font-weight: bold;
+            color: #fca311;
+        }
+
+        /* Lien de page */
+        .css-1d391kg a {
+            color: #ffffff !important;
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 0.4rem 0.8rem;
+            display: block;
+            border-radius: 0.5rem;
+        }
+
+        /* Lien actif */
+        .css-1d391kg .css-1v3fvcr {
+            background-color: #3c3c5e !important;
+        }
+
+        /* Au survol */
+        .css-1d391kg a:hover {
+            background-color: #2a2a40;
+        }
+
+        /* Espacement pour la lisibilité */
+        .css-1d391kg {
+            margin-top: 1rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
 ###################################
 # 1) Chargement des données Excel
 ###################################
