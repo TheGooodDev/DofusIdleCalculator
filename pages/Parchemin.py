@@ -1,12 +1,19 @@
 import streamlit as st
 import pandas as pd
 import math
+import re
 
 # ---------------- CONFIG PAGE ----------------
-st.set_page_config(layout="wide", initial_sidebar_state="collapsed",page_title="Parchemins",page_icon="📜")
-# --- nav bar ---
+st.set_page_config(
+    layout="wide",
+    initial_sidebar_state="collapsed",
+    page_title="Parchemins",
+    page_icon="📜",
+)
 
-st.markdown("""
+# --- nav bar & styles ---
+st.markdown(
+    """
     <style>
         .main-title {
             font-size: 2.5em;
@@ -24,18 +31,16 @@ st.markdown("""
             font-size: 2.5em !important;
             color: #ffffff !important;
         }
-                    /* Barre latérale */
+        /* Barre latérale */
         section[data-testid="stSidebar"] {
             background-color: #1c1c2e;
             padding: 1.5rem 1rem;
         }
-
         /* Titres de pages */
         .css-17eq0hr {
             font-weight: bold;
             color: #fca311;
         }
-
         /* Lien de page */
         .css-1d391kg a {
             color: #ffffff !important;
@@ -45,42 +50,62 @@ st.markdown("""
             display: block;
             border-radius: 0.5rem;
         }
-
         /* Lien actif */
         .css-1d391kg .css-1v3fvcr {
             background-color: #3c3c5e !important;
         }
-
         /* Au survol */
         .css-1d391kg a:hover {
             background-color: #2a2a40;
         }
-
         /* Espacement pour la lisibilité */
         .css-1d391kg {
             margin-top: 1rem;
         }
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True,
+)
 
 # ------------------- OUTIL DE FORMATTAGE -------------------
+SPACE_THIN_NBSP = "\u202F"  # espace fine insécable
+
 def fmt(n: int | float) -> str:
-    return f"{n:,}".replace(",", " ")  # espace fine insécable U+202F
+    """Retourne la chaîne avec séparateur de milliers (espace fine)."""
+    return f"{n:,}".replace(",", SPACE_THIN_NBSP)
+
+
+def parse_int(s: str) -> int:
+    """Supprime tout sauf les chiffres et retourne un int (0 si vide)."""
+    digits = re.sub(r"\D", "", s or "0")
+    return int(digits) if digits else 0
+
+
+def int_input(label: str, default: int, key: str, *, min_value: int = 0) -> int:
+    """Champ de saisie textuel affichant des séparateurs de milliers."""
+    raw = st.text_input(label, value=fmt(default), key=key)
+    value = parse_int(raw)
+    if value < min_value:
+        st.warning(f"La valeur minimale est {min_value}.")
+        value = min_value
+    return value
 
 # ------------------------ TABLE DES PALIERS ----------------
 TIERS = pd.DataFrame(
     [
-        (   100_000,     10,       1,  "Petit Parchemin"),
-        ( 1_000_000,    100,      35,  "Parchemin"),
-        (10_000_000,  1_000,     450,  "Grand Parchemin"),
-        (100_000_000,10_000,   6_000,  "Puissant Parchemin"),
+        (100_000, 10, 1, "Petit Parchemin"),
+        (1_000_000, 100, 35, "Parchemin"),
+        (10_000_000, 1_000, 450, "Grand Parchemin"),
+        (100_000_000, 10_000, 6_000, "Puissant Parchemin"),
     ],
     columns=["seuil_max", "cout", "gain", "label"],
 )
 
 # ------------------------ FONCTION DE CALCUL ------------------------
 @st.cache_data
-def calculer_cout_parchemin(niveau_actuel: int, niveau_voulu: int, tiers_df: pd.DataFrame):
+def calculer_cout_parchemin(
+    niveau_actuel: int, niveau_voulu: int, tiers_df: pd.DataFrame
+):
     temp = niveau_actuel
     cout_total = 0
     nb_parchemins = {row.label: 0 for row in tiers_df.itertuples()}
@@ -95,8 +120,8 @@ def calculer_cout_parchemin(niveau_actuel: int, niveau_voulu: int, tiers_df: pd.
         stats_a_gagner = borne_sup - borne_inf + 1
         parchemins_utiles = math.ceil(stats_a_gagner / row.gain)
 
-        temp        += parchemins_utiles * row.gain
-        cout_total  += parchemins_utiles * row.cout
+        temp += parchemins_utiles * row.gain
+        cout_total += parchemins_utiles * row.cout
         nb_parchemins[row.label] += parchemins_utiles
 
     return cout_total, nb_parchemins
@@ -106,9 +131,9 @@ st.markdown('<div class="main-title">Coût en parchemins</div>', unsafe_allow_ht
 
 col1, col2 = st.columns(2)
 with col1:
-    niveau_actuel = st.number_input("Stats actuelles :", min_value=0, value=1)
+    niveau_actuel = int_input("Stats actuelles :", 1, key="lvl_actuel")
 with col2:
-    niveau_voulu  = st.number_input("Stats voulues :",  min_value=0, value=1_000_000)
+    niveau_voulu = int_input("Stats voulues :", 1_000_000, key="lvl_voulu")
 
 if niveau_voulu <= niveau_actuel:
     st.info("Le niveau voulu doit être supérieur au niveau actuel.")
@@ -121,14 +146,16 @@ st.markdown('<div class="sub">📊 Résultat</div>', unsafe_allow_html=True)
 st.metric("💰 Coût total (points d'éveil)", fmt(cout_total))
 
 res_df = (
-    pd.DataFrame([{"Parchemin": k, "Nombre": v} for k, v in details.items() if v > 0])
-      .set_index("Parchemin")
+    pd.DataFrame([
+        {"Parchemin": k, "Nombre": v} for k, v in details.items() if v > 0
+    ]).set_index("Parchemin")
 )
 res_df["Nombre"] = res_df["Nombre"].apply(fmt)
 
 st.dataframe(res_df, use_container_width=True)
 
 # ------------------- RUNS COMPLETS ------------------------------
+
 def points_par_run(i: int, etage_final: int) -> int:
     return sum(range(i, etage_final + 1))
 
@@ -137,12 +164,18 @@ if cout_total > 0:
 
     col3, col4 = st.columns(2)
     with col3:
-        level_relic = st.number_input("Niveau de la relique actuelle :", min_value=0, max_value=350, value=1)
+        level_relic = st.number_input(
+            "Niveau de la relique actuelle :", min_value=0, max_value=350, value=1
+        )
     with col4:
-        idle_etage = st.number_input("Étage Maximum idle :", min_value=0, value=1)
+        idle_etage = st.number_input(
+            "Étage Maximum idle :", min_value=0, value=1
+        )
 
     if level_relic > idle_etage:
-        st.info("Le niveau de la relique doit être inférieur ou égal à l'étage maximum.")
+        st.info(
+            "Le niveau de la relique doit être inférieur ou égal à l'étage maximum."
+        )
         st.stop()
 
     gain_run = points_par_run(level_relic, idle_etage)
