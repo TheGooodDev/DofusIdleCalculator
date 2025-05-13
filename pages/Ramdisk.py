@@ -45,6 +45,7 @@ st.markdown("""
 st.title("🚀 Booster Dofus grâce au Ramdisk")
 st.header("1. Secret professionnel")
 
+# En vrai si t'es venu jusque là, tu mérites bien de connaitre le secret.
 # st.header("1. Pourquoi utiliser un Ramdisk ?")
 # st.markdown("""
 # Chargement instantanément. Plus de freezes relous, et en prime, tu économises la vie de ton SSD.
